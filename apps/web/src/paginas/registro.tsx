@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router";
 import { esquemaNuevaEmpresa, esquemaRegistro, type DatosRegistro, type NuevaEmpresa } from "@cvf/compartido";
 import { authCliente, mensajeDeAuth } from "@/api/auth";
 import { api, ErrorApi, leer } from "@/api/cliente";
+import { useSalir } from "@/api/salir";
 import { LLAVE_YO } from "@/api/sesion";
 import { PantallaAcceso } from "@/componentes/pantalla-acceso";
 import { AvisoError } from "@/componentes/ui/aviso";
@@ -96,6 +97,7 @@ export function PaginaCrearEmpresa() {
   const cliente = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const formulario = useForm<NuevaEmpresa>({ resolver: zodResolver(esquemaNuevaEmpresa) });
+  const sesion = useSalir();
   const { errors, isSubmitting } = formulario.formState;
 
   const enviar = formulario.handleSubmit(async (datos) => {
@@ -110,9 +112,24 @@ export function PaginaCrearEmpresa() {
   });
 
   return (
-    <PantallaAcceso titulo="Datos de su compraventa">
+    <PantallaAcceso
+      titulo="Datos de su compraventa"
+      pie={
+        <>
+          ¿No es su cuenta?{" "}
+          <button
+            type="button"
+            onClick={sesion.salir}
+            disabled={sesion.saliendo}
+            className="font-semibold text-texto underline"
+          >
+            Salir
+          </button>
+        </>
+      }
+    >
       <form onSubmit={enviar} className="flex flex-col gap-4" noValidate>
-        <AvisoError>{error}</AvisoError>
+        <AvisoError>{error ?? sesion.error}</AvisoError>
         <Campo etiqueta="Nombre de la compraventa" placeholder="Ej.: Autos La 80" error={errors.nombre?.message} {...formulario.register("nombre")} />
         <Campo etiqueta="Ciudad" placeholder="Ej.: Medellín" error={errors.ciudad?.message} {...formulario.register("ciudad")} />
         <Boton type="submit" tamano="grande" disabled={isSubmitting}>

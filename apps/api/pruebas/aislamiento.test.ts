@@ -116,6 +116,19 @@ describe("sesión y roles", () => {
     expect(r.datos.error.codigo).toBe("SIN_EMPRESA");
   });
 
+  it("no se pueden crear ni editar empresas por las rutas directas de Better Auth (no dejarían auditoría)", async () => {
+    const crear = await pedir("/api/auth/organization/create", {
+      cuerpo: { name: "Sin auditoría", slug: "sin-auditoria" },
+      cookie: a.cookie,
+    });
+    expect(crear.estado).toBe(404);
+    const editar = await pedir("/api/auth/organization/update", {
+      cuerpo: { data: { name: "Otro nombre" }, organizationId: a.empresaId },
+      cookie: a.cookie,
+    });
+    expect(editar.estado).toBe(404);
+  });
+
   it("no se puede crear una segunda compraventa", async () => {
     const r = await pedir("/api/empresas", { cuerpo: { nombre: "Otra", ciudad: "Cali" }, cookie: a.cookie });
     expect(r.estado).toBe(409);

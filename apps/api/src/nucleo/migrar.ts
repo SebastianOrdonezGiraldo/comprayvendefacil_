@@ -11,19 +11,30 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client } from "pg";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { existsSync } from "node:fs";
 
 const adminUrl = process.env.DATABASE_ADMIN_URL;
 const appUrl = process.env.DATABASE_URL;
 if (!adminUrl || !appUrl) throw new Error("Faltan DATABASE_ADMIN_URL y DATABASE_URL");
 
-const carpetaMigraciones =
-  process.env.CARPETA_MIGRACIONES ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../drizzle");
+/**
+ * Carpeta de migraciones. Funciona igual desde el código fuente (src/nucleo) y
+ * desde el build empaquetado (dist/), y se puede fijar con CARPETA_MIGRACIONES.
+ */
+function buscarCarpetaMigraciones(): string {
+  if (process.env.CARPETA_MIGRACIONES) return path.resolve(process.env.CARPETA_MIGRACIONES);
+  const aqui = path.dirname(fileURLToPath(import.meta.url));
+  const candidatas = [path.resolve(aqui, "../../drizzle"), path.resolve(aqui, "../drizzle"), path.resolve(aqui, "../../../drizzle")];
+  const encontrada = candidatas.find((c) => existsSync(path.join(c, "meta", "_journal.json")));
+  if (!encontrada) throw new Error(`No se encontró la carpeta de migraciones. Se buscó en: ${candidatas.join(", ")}`);
+  return encontrada;
+}
 
 export async function migrar() {
   const cliente = new Client({ connectionString: adminUrl });
   await cliente.connect();
   try {
-    await migrate(drizzle(cliente), { migrationsFolder: carpetaMigraciones });
+    await migrate(drizzle(cliente), { migrationsFolder: buscarCarpetaMigraciones() });
     await prepararUsuarioApp(cliente, new URL(appUrl!));
   } finally {
     await cliente.end();

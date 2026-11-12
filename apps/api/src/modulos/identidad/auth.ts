@@ -5,6 +5,7 @@ import { organization } from "better-auth/plugins/organization";
 import { db } from "../../nucleo/db";
 import { nuevoId } from "../../nucleo/columnas";
 import { entorno } from "../../nucleo/entorno";
+import { CABECERA_IP } from "../../nucleo/ip";
 import { almacenSecundario, redis } from "../../nucleo/redis";
 import { control, rolesAuth } from "./permisos";
 import * as tablas from "./tablas";
@@ -48,6 +49,8 @@ export const auth = betterAuth({
   },
   advanced: {
     cookiePrefix: "cvf",
+    // Solo se confía en una cabecera que el servidor reescribe en cada petición (ver nucleo/ip.ts).
+    ipAddress: { ipAddressHeaders: [CABECERA_IP] },
     database: { generateId: () => nuevoId() },
   },
   databaseHooks: {

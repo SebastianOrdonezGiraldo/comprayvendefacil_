@@ -6,6 +6,7 @@ import { entorno } from "./nucleo/entorno";
 import { ErrorApp } from "./nucleo/errores";
 import { registro } from "./nucleo/registro";
 import { auth } from "./modulos/identidad/auth";
+import { CABECERA_IP, ipCliente } from "./nucleo/ip";
 import { rutasIdentidad } from "./modulos/identidad/rutas";
 
 const app = new Hono<Entorno>();
@@ -16,8 +17,22 @@ app.use(
   cors({ origin: entorno.WEB_URL, credentials: true, allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE"] }),
 );
 
-// Better Auth atiende registro, ingreso, salida y empresas en /api/auth/*
-app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+/**
+ * De las rutas de empresas de Better Auth solo se expone cambiar la empresa activa.
+ * Crear, editar o borrar empresas pasa por nuestros servicios, que validan y dejan auditoría.
+ */
+const RUTAS_EMPRESA_PERMITIDAS = new Set(["/api/auth/organization/set-active"]);
+
+// Better Auth atiende registro, ingreso y salida en /api/auth/*
+app.on(["GET", "POST"], "/api/auth/*", (c) => {
+  if (c.req.path.startsWith("/api/auth/organization/") && !RUTAS_EMPRESA_PERMITIDAS.has(c.req.path)) {
+    return c.json({ error: { codigo: "NO_ENCONTRADO", mensaje: "Ruta no disponible." } }, 404);
+  }
+  // La IP para el límite de intentos la pone el servidor; nunca se toma tal cual del navegador.
+  const cabeceras = new Headers(c.req.raw.headers);
+  cabeceras.set(CABECERA_IP, ipCliente(c));
+  return auth.handler(new Request(c.req.raw, { headers: cabeceras }));
+});
 
 app.use("/api/*", conSesion);
 

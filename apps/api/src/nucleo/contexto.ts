@@ -1,9 +1,7 @@
-import { and, eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
-import { esRol, type Rol } from "@cvf/compartido";
+import type { Rol } from "@cvf/compartido";
 import { auth } from "../modulos/identidad/auth";
-import { miembro } from "../modulos/identidad/tablas";
-import { db } from "./db";
+import { empresaActivaDe } from "../modulos/identidad/servicio";
 import { noAutorizado, prohibido, sinEmpresa } from "./errores";
 
 type Sesion = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
@@ -37,18 +35,11 @@ export const requiereEmpresa = createMiddleware<Entorno>(async (c, next) => {
   const sesion = c.get("sesion");
   if (!usuario || !sesion) throw noAutorizado();
 
-  const empresaId = sesion.activeOrganizationId;
-  if (!empresaId) throw sinEmpresa();
-
   // Se confirma contra la base que la persona sigue siendo miembro y con qué rol.
-  const [fila] = await db
-    .select({ rol: miembro.role })
-    .from(miembro)
-    .where(and(eq(miembro.organizationId, empresaId), eq(miembro.userId, usuario.id)))
-    .limit(1);
-  if (!fila || !esRol(fila.rol)) throw sinEmpresa();
+  const empresa = await empresaActivaDe(usuario.id, sesion.activeOrganizationId);
+  if (!empresa) throw sinEmpresa();
 
-  c.set("empresa", { empresaId, usuarioId: usuario.id, rol: fila.rol });
+  c.set("empresa", { empresaId: empresa.id, usuarioId: usuario.id, rol: empresa.rol });
   await next();
 });
 

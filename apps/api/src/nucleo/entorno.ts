@@ -14,6 +14,8 @@ const esquemaEntorno = z.object({
   BETTER_AUTH_URL: z.url(),
   /** Dirección de la web, para permitir sus peticiones. */
   WEB_URL: z.url().default("http://localhost:5173"),
+  /** Cabecera con la IP del cliente puesta por Caddy (p. ej. x-real-ip). Vacío = IP del socket. Ver nucleo/ip.ts. */
+  IP_DESDE_PROXY: z.string().toLowerCase().optional(),
 });
 
 export type Entorno = z.infer<typeof esquemaEntorno>;

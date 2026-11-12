@@ -5,7 +5,7 @@ import { listarAuditoria } from "../../nucleo/auditoria";
 import { requiereEmpresa, requiereRol, type Entorno } from "../../nucleo/contexto";
 import { enEmpresa } from "../../nucleo/db";
 import { noAutorizado } from "../../nucleo/errores";
-import { crearEmpresa, empresaDeUsuario } from "./servicio";
+import { crearEmpresa, empresaActivaDe } from "./servicio";
 
 export const rutasIdentidad = new Hono<Entorno>()
   /** Quién soy, en qué empresa estoy y con qué rol. La web lo usa al abrir. */
@@ -13,7 +13,7 @@ export const rutasIdentidad = new Hono<Entorno>()
     const usuario = c.get("usuario");
     const sesion = c.get("sesion");
     if (!usuario || !sesion) throw noAutorizado();
-    const empresa = await empresaDeUsuario(usuario.id, sesion.activeOrganizationId);
+    const empresa = await empresaActivaDe(usuario.id, sesion.activeOrganizationId);
     return c.json({
       usuario: { id: usuario.id, nombre: usuario.name, correo: usuario.email },
       empresa,

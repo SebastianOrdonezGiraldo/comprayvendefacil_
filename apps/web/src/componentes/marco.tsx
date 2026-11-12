@@ -1,8 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Car, Handshake, House, LogOut, Plus, Wallet, type LucideIcon } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { NOMBRE_ROL } from "@cvf/compartido";
-import { authCliente } from "@/api/auth";
+import { useSalir } from "@/api/salir";
 import { useYo } from "@/api/sesion";
 import { cn } from "@/lib/utilidades";
 
@@ -35,13 +34,7 @@ function Pestana({ a, icono: Icono, texto }: { a: string; icono: LucideIcon; tex
 export function Marco() {
   const { data } = useYo();
   const navegar = useNavigate();
-  const cliente = useQueryClient();
-
-  async function salir() {
-    await authCliente.signOut();
-    cliente.clear();
-    navegar("/ingresar", { replace: true });
-  }
+  const { salir, error, saliendo } = useSalir();
 
   return (
     <div className="h-full flex flex-col max-w-3xl mx-auto bg-fondo">
@@ -58,6 +51,7 @@ export function Marco() {
         </div>
         <button
           onClick={salir}
+          disabled={saliendo}
           className="p-2 -mr-2 rounded-placa text-tenue hover:text-texto hover:bg-fondo"
           aria-label="Salir"
           title="Salir"
@@ -65,6 +59,12 @@ export function Marco() {
           <LogOut size={22} aria-hidden />
         </button>
       </header>
+
+      {error && (
+        <div role="alert" className="flex-none bg-perdida-fondo text-perdida font-medium px-4 py-2.5">
+          {error}
+        </div>
+      )}
 
       <main className="flex-1 overflow-y-auto px-4 py-5">
         <Outlet />
