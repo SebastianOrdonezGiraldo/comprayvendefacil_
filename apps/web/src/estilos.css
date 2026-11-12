@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/*
+ * Marca "Placa": amarillo y negro como las placas colombianas.
+ * Verde = ganancia, rojo = pérdida. Tokens tomados del prototipo aprobado.
+ */
+@theme {
+  --color-placa: #f5c400;
+  --color-sobre-placa: #16181b;
+  --color-asfalto: #16181b;
+  --color-escenario: #2a2d32;
+  --color-fondo: #f4f5f7;
+  --color-superficie: #ffffff;
+  --color-texto: #16181b;
+  --color-tenue: #5b6270;
+  --color-borde: #dde0e5;
+  --color-ganancia: #107a44;
+  --color-ganancia-fondo: #e7f4ec;
+  --color-perdida: #c2362a;
+  --color-perdida-fondo: #fbeae8;
+  --color-aviso: #b45309;
+  --color-aviso-fondo: #fdf3e1;
+
+  --font-sans: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-titulo: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+
+  --radius-placa: 8px;
+}
+
+html,
+body,
+#raiz {
+  height: 100%;
+}
+
+body {
+  @apply bg-fondo text-texto font-sans antialiased;
+  font-size: 17px; /* letra grande: muchos usuarios leen desde el celular, en la vitrina */
+}
+
+h1,
+h2,
+h3 {
+  @apply font-titulo font-bold tracking-tight;
+}

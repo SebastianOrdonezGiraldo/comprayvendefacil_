@@ -1,0 +1,28 @@
+# Servicios para desarrollo local: PostgreSQL y Redis.
+# Uso: docker compose up -d   (luego: pnpm db:migrar && pnpm dev)
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: comprayvendefacil
+      # Dueño de las tablas (solo migraciones). El usuario de la aplicación lo crea `pnpm db:migrar`.
+      POSTGRES_USER: cvf_admin
+      POSTGRES_PASSWORD: clave-local
+      TZ: America/Bogota
+    ports:
+      - "5432:5432"
+    volumes:
+      - datos-postgres:/var/lib/postgresql/data
+      - ./infra/postgres/base-pruebas.sql:/docker-entrypoint-initdb.d/base-pruebas.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cvf_admin -d comprayvendefacil"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  datos-postgres:
